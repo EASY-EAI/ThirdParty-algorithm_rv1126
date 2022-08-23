@@ -11,7 +11,7 @@
 [查阅入门(快速上手)指南](https://www.easy-eai.com/document_details/3/133)
 
 如果您具备丰富的嵌入式C语言开发经验，您可以：  
-[查阅第三方算法使用实例](https://www.easy-eai.com/document_details/3/33)
+[查阅第三方算法使用实例](https://www.easy-eai.com/document_details/3/204)
 
 
 使用方法：  

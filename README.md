@@ -11,7 +11,7 @@ If you first come into contact with this project. You can do:
 [reference the Quick Start Guide](https://www.easy-eai.com/document_details/3/133)
 
 If you have extensive experience in embedded C development. You can do:  
-[reference the Examples of Third-party Algorithms](https://www.easy-eai.com/document_details/3/33)
+[reference the Examples of Third-party Algorithms](https://www.easy-eai.com/document_details/3/204)
 
 
 How to use：  

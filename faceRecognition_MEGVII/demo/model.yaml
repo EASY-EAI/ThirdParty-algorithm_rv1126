@@ -1,0 +1,26 @@
+%YAML:1.0
+# model path
+
+anchor_path: ../model/rv1109_anchor_A_encrypt.bin
+detect_model: ../model/rv1109_detect_F2_encrypt.bin
+postfilter_model: ../model/rv1109_postfilter_E_encrypt.bin
+poseblur_model: ../model/rv1109_poseblur_A_encrypt.bin
+
+refine_model: ../model/rv1109_landmark_A_encrypt.bin
+
+# bgr liveness model
+liveness_bgr_model: ../model/rv1109_live_rgb_A_encrypt.bin
+#bgrir liveness model
+liveness_bgrir_model: ../model/rv1109_live_rgbir_A_encrypt.bin
+
+age_gender_model: ../model/rv1109_age_gender_A_encrypt.bin
+rc_model: ../model/rv1109_rc_attr_E_encrypt.bin
+
+occl_model: ''
+stn_model: ../model/rv1109_preFeat_Q_encrypt.bin
+feature_model: ../model/rv1109_feat_Q_encrypt.bin
+group_model_path: ''
+
+detect_threshold: 0.3
+postfilter_threshold: 0.5
+
