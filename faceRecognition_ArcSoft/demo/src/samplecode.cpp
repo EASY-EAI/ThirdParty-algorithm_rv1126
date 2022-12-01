@@ -12,9 +12,6 @@
 #include <opencv2/opencv.hpp>
 using namespace std;
 //测试数据，从开发者中心获取替换
-#define APPID "6WukHBZE94yYUJEKErsrsnRf3hJ23jzuSqRb7DuSqDvJ"
-#define SDKKEY "8YAoFCM6aZ6ww4qySauiN8aL4MitCGzpYCx1cuE1adhf"
-#define ACTIVEKEY "0985-1162-F216-9VDV"  
 #define NSCALE 27
 #define FACENUM	10  //支持检测的人脸数不超过10个
 #define SafeFree(p) { if ((p)) free(p); (p) = NULL; }
@@ -30,29 +27,36 @@ void printSDKInfo()
     printf("\n************* ArcFace SDK Info *****************\n");
 
     MRESULT res = MOK;
-
-    // res = ASFOnlineActivation(APPID, SDKKEY, ACTIVEKEY);
-     res = ASFOfflineActivation("./key/09851162F2169VDV.dat"); //激活文件路径
+#if 0
+#define APPID "6WukHBZE94yYUJEKErsrsnRf3hJ23jzuSqRb7DuSqDvJ"
+#define SDKKEY "8YAoFCM6aZ6ww4qySauiN8aL4MitCGzpYCx1cuE1adhf"
+#define ACTIVEKEY "0985-1162-F216-9VDV"  
+	// 在线激活
+    res = ASFOnlineActivation(APPID, SDKKEY, ACTIVEKEY);
+#else
+	// 离线激活
+    res = ASFOfflineActivation("./key/09851162F2169VDV.dat"); //激活文件路径
+#endif
     if (MOK != res && MERR_ASF_ALREADY_ACTIVATED != res)
-        printf("激活失败错误码: %x\n", res);
+        printf("激活失败错误码: %x\n", (uint32_t)res);
     else
-        printf("************设备激活成功************（返回值：%x）\n", res);
-    //采集当前设备信息，用于离线激活（可注释）
-  
-  /*  char* deviceInfo = NULL;
+        printf("************设备激活成功************（返回值：%x）\n", (uint32_t)res);
+	
+	
+    //采集当前设备信息，用于离线激活（可注释）  
+/*  char* deviceInfo = NULL;
     res = ASFGetActiveDeviceInfo(&deviceInfo);
     if (res != MOK) {
         printf("ASFGetActiveDeviceInfo failed: %x\n", res);
     } else {
         printf("ASFGetActiveDeviceInfo sucess: %s\n", deviceInfo);
     }
-
-    */
+*/
     //获取激活文件信息
     ASF_ActiveFileInfo activeFileInfo = { 0 };
     res = ASFGetActiveFileInfo(&activeFileInfo);
     if (res != MOK){
-        printf("获取激活文件信息【失败】（返回值: %x）\n", res);
+        printf("获取激活文件信息【失败】（返回值: %x）\n", (uint32_t)res);
     } else {
         //这里仅获取了有效期时间，还需要其他信息直接打印即可
         char startDateTime[32];
@@ -91,43 +95,43 @@ int main(int argc, char* argv[])
 	res = ASFInitEngine(ASF_DETECT_MODE_IMAGE, ASF_OP_0_ONLY,
 	        NSCALE, FACENUM, initMask, &handle);
 	if (res != MOK)
-		printf("初始化引擎【失败】（返回值：%x）\n", res);
+		printf("初始化引擎【失败】（返回值：%x）\n", (uint32_t)res);
 	else
-		printf("初始化引擎【成功:】（返回值：%x）\n", res);
+		printf("初始化引擎【成功:】（返回值：%x）\n", (uint32_t)res);
 
 
 	/*********以下三张图片均存在，图片保存在 ./images/ 文件夹下*********/
 	
 	//可见光图像 NV21格式裸数据（YUV420，NV21）
-	char* picPath1 = "./images/test1.NV21";
+	const char* picPath1 = "./images/test1.NV21";
      int Width1 = 720;
     int Height1 = 720;
     // char* picPath1 = "../images/640x480_1.NV21";
     // int Width1 = 640;
     // int Height1 = 480;
-	int Format1 = ASVL_PAF_NV21;
+	// int Format1 = ASVL_PAF_NV21;
 	MUInt8* imageData1 = (MUInt8*)malloc(Height1*Width1*3/2);
 	FILE* fp1 = fopen(picPath1, "rb");
 
 	//可见光图像 NV21格式裸数据
-	char* picPath2 = "./images/test2.NV21";
+	const char* picPath2 = "./images/test2.NV21";
     int Width2 = 700;
 	int Height2 = 700;
     // char* picPath2 = "../images/640x480_2.NV21";
     // int Width2 = 640;
     // int Height2 = 480;
-	int Format2 = ASVL_PAF_NV21;
+	// int Format2 = ASVL_PAF_NV21;
 	MUInt8* imageData2 = (MUInt8*)malloc(Height2*Width2*3/2);
 	FILE* fp2 = fopen(picPath2, "rb");
 	
 	//红外图像 NV21格式裸数据
-	char* picPath3 = "./images/test3.NV21";
+	const char* picPath3 = "./images/test3.NV21";
     int Width3 = 720;
 	int Height3 = 720;
     // char* picPath3 = "../images/640x480_3.NV21";
     //  int Width3 = 640;
     // int Height3 = 480;
-	int Format3 = ASVL_PAF_GRAY;
+	// int Format3 = ASVL_PAF_GRAY;
 	MUInt8* imageData3 = (MUInt8*)malloc(Height3*Width3);	//只读NV21前2/3的数据为灰度数据（Y平面）
 	FILE* fp3 = fopen(picPath3, "rb");
 	if (fp1 && fp2 && fp3)
@@ -152,7 +156,7 @@ int main(int argc, char* argv[])
         //传入引擎，图片数据，传出人脸信息结构体
         res = ASFDetectFacesEx(handle, &offscreen1, &detectedFaces1);//图片信息转LPASF_MultiFaceInfo结构体数据
         if (res != MOK || detectedFaces1.faceNum < 1) {
-            printf("%s 人脸检测（注册照）【失败】（返回值： %x）\n", picPath1, res);
+            printf("%s 人脸检测（注册照）【失败】（返回值： %x）\n", picPath1, (uint32_t)res);
         } else {
             //传入图片的结构体信息
             SingleDetectedFaces.faceRect.left = detectedFaces1.faceRect[0].left;
@@ -165,14 +169,14 @@ int main(int argc, char* argv[])
             //传入引擎，图片数据，传入：图片结构体信息，传出：人脸特征，用于注册人脸，mask=0（无口罩）
             res = ASFFaceFeatureExtractEx(handle, &offscreen1, &SingleDetectedFaces, &feature1, ASF_REGISTER, 0);
             if (res != MOK) {
-                printf("%s 人脸特征提取（注册照）【失败】（返回值: %x）\n", picPath1, res);
+                printf("%s 人脸特征提取（注册照）【失败】（返回值: %x）\n", picPath1, (uint32_t)res);
             } else {
                 //拷贝feature，否则第二次进行特征提取，会覆盖第一次特征提取的数据，导致比对的结果为1
                 copyfeature1.featureSize = feature1.featureSize;
                 copyfeature1.feature = (MByte *) malloc(feature1.featureSize);
                 memset(copyfeature1.feature, 0, feature1.featureSize);
                 memcpy(copyfeature1.feature, feature1.feature, feature1.featureSize);
-                printf("%s 人脸特征提取（注册照）【成功】（返回值: %x）\n", picPath1, res);
+                printf("%s 人脸特征提取（注册照）【成功】（返回值: %x）\n", picPath1, (uint32_t)res);
             }
         }
 
@@ -182,7 +186,7 @@ int main(int argc, char* argv[])
         //传入引擎，遮挡阈值
         res = ASFSetFaceShelterParam(handle, ShelterThreshhold);
         if (res != MOK) {
-            printf("设置遮挡阈值【失败】（返回值: %x）\n", res);
+            printf("设置遮挡阈值【失败】（返回值: %x）\n", (uint32_t)res);
         }
 
         //第二张人脸
@@ -194,7 +198,7 @@ int main(int argc, char* argv[])
         ASF_MaskInfo maskInfo = {0};              //是否带口罩
         res = ASFDetectFacesEx(handle, &offscreen2, &detectedFaces2);//图片信息转LPASF_MultiFaceInfo结构体数据
         if (res != MOK || detectedFaces2.faceNum < 1) {
-            printf("%s 人脸检测（识别照）【失败】（返回值： %x）\n", picPath2, res);
+            printf("%s 人脸检测（识别照）【失败】（返回值： %x）\n", picPath2, (uint32_t)res);
         } else {
             SingleDetectedFaces.faceRect.left = detectedFaces2.faceRect[0].left;
             SingleDetectedFaces.faceRect.top = detectedFaces2.faceRect[0].top;
@@ -208,22 +212,22 @@ int main(int argc, char* argv[])
             if (res == MOK) {
                 printf("图像质量检测（识别照）【成功】（返回值: %f）\n", imageQualityConfidenceLevel);
             } else {
-                printf("图像质量检测（识别照）【失败】（返回值:%x）\n", res);
+                printf("图像质量检测（识别照）【失败】（返回值:%x）\n", (uint32_t)res);
             }
 
             // 检测是否戴口罩
             MInt32 proMask = ASF_MASKDETECT;
             res = ASFProcessEx(handle, &offscreen2, &detectedFaces2, proMask);
             if (res != MOK) {
-                printf("检测是否带口罩（识别照）【失败】（返回值: %x）\n", res);
+                printf("检测是否带口罩（识别照）【失败】（返回值: %x）\n", (uint32_t)res);
             } else {
-                printf("检测是否带口罩（识别照）【成功】（返回值: %x）\n", res);
+                printf("检测是否带口罩（识别照）【成功】（返回值: %x）\n", (uint32_t)res);
             }
 
             // 获取是否戴口罩
             res = ASFGetMask(handle, &maskInfo);
             if (res != MOK) {
-                printf("获取是否戴口罩（识别照）【失败】（返回值: %x）\n", res);
+                printf("获取是否戴口罩（识别照）【失败】（返回值: %x）\n", (uint32_t)res);
             } else {
                 printf("获取是否戴口罩（识别照）【成功】（0：代表没有带口罩，1：代表带口罩 ,-1：代表不确定）（返回值: %d）\n", maskInfo.maskArray[0]);
             }
@@ -233,9 +237,9 @@ int main(int argc, char* argv[])
             res = ASFFaceFeatureExtractEx(handle, &offscreen2, &SingleDetectedFaces, &feature2,
                                           ASF_RECOGNITION, maskInfo.maskArray[0]);
             if (res != MOK) {
-                printf("%s 人脸特征提取（识别照）【失败 】（返回值：%x）\n", picPath2, res);
+                printf("%s 人脸特征提取（识别照）【失败 】（返回值：%x）\n", picPath2, (uint32_t)res);
             } else {
-                printf("%s 人脸特征提取（识别照）【成功 】（返回值：%x）\n", picPath2, res);
+                printf("%s 人脸特征提取（识别照）【成功 】（返回值：%x）\n", picPath2, (uint32_t)res);
             }
         }
 
@@ -252,7 +256,7 @@ int main(int argc, char* argv[])
         res = ASFFaceFeatureCompare(handle, &copyfeature1, &feature2, &confidenceLevel,
                 maskInfo.maskArray[0], ASF_LIFE_PHOTO);
         if (res != MOK) {
-            printf("识别照与注册照进行人脸特征比对【失败】（返回值:  %x）\n", res);
+            printf("识别照与注册照进行人脸特征比对【失败】（返回值:  %x）\n", (uint32_t)res);
         } else {
             printf("识别照与注册照进行人脸特征比对【成功】（返回值: %lf）\n", confidenceLevel);
         }
@@ -264,7 +268,7 @@ int main(int argc, char* argv[])
         threshold.thresholdmodel_IR = 0.7;
         res = ASFSetLivenessParam(handle, &threshold);//设置活体置信度
         if (res != MOK) {
-            printf("设置RGB活体检测置信度【失败】（返回值: %x）\n", res);
+            printf("设置RGB活体检测置信度【失败】（返回值: %x）\n", (uint32_t)res);
         }
 
         // 人脸信息检测
@@ -272,15 +276,15 @@ int main(int argc, char* argv[])
                              ASF_FACESHELTER | ASF_MASKDETECT | ASF_FACELANDMARK;
         res = ASFProcessEx(handle, &offscreen2, &detectedFaces2, processMask);
         if (res != MOK)
-            printf("人脸特征提取（识别照）【失败】（返回值: %x）\n", res);
+            printf("人脸特征提取（识别照）【失败】（返回值: %x）\n", (uint32_t)res);
         else
-            printf("人脸特征提取（识别照）【成功】（返回值: %x）\n", res);
+            printf("人脸特征提取（识别照）【成功】（返回值: %x）\n", (uint32_t)res);
 
         // 获取年龄
         ASF_AgeInfo ageInfo = {0};
         res = ASFGetAge(handle, &ageInfo);
         if (res != MOK || ageInfo.num < 1)
-            printf("%s 获取年龄【失败】（返回值: %x）\n", picPath2, res);
+            printf("%s 获取年龄【失败】（返回值: %x）\n", picPath2, (uint32_t)res);
         else
             printf("%s 获取年龄【成功】（返回值: %d）\n", picPath2, ageInfo.ageArray[0]);
 
@@ -288,7 +292,7 @@ int main(int argc, char* argv[])
         ASF_GenderInfo genderInfo = {0};
         res = ASFGetGender(handle, &genderInfo);
         if (res != MOK || genderInfo.num < 1)
-            printf("%s 获取性别【失败】（返回值: %x）\n", picPath2, res);
+            printf("%s 获取性别【失败】（返回值: %x）\n", picPath2, (uint32_t)res);
         else
             printf("%s  获取性别【成功】（0：男 ，1：女）（返回值 :%d）\n", picPath2, genderInfo.genderArray[0]);
 
@@ -296,7 +300,7 @@ int main(int argc, char* argv[])
         ASF_Face3DAngle angleInfo = {0};
         res = ASFGetFace3DAngle(handle, &angleInfo);
         if (res != MOK || angleInfo.num < 1)
-            printf("%s 获取人脸3D角度【失败】（返回值: %x）\n", picPath2, res);
+            printf("%s 获取人脸3D角度【失败】（返回值: %x）\n", picPath2, (uint32_t)res);
         else
             printf("%s获取人脸3D角度【成功】（返回值：  roll: %lf  yaw: %lf  pitch: %lf）\n", picPath2, angleInfo.roll[0],
                    angleInfo.yaw[0], angleInfo.pitch[0]);
@@ -305,7 +309,7 @@ int main(int argc, char* argv[])
         ASF_LivenessInfo rgbLivenessInfo = {0};
         res = ASFGetLivenessScore(handle, &rgbLivenessInfo);
         if (res != MOK || rgbLivenessInfo.num < 1)
-            printf("获取RGB活体检测【失败】（返回值: %x）\n", res);
+            printf("获取RGB活体检测【失败】（返回值: %x）\n", (uint32_t)res);
         else
             printf("获取RGB活体检测【成功】（1：真人，0：非真人）（返回值: %d）\n", rgbLivenessInfo.isLive[0]);
 
@@ -313,7 +317,7 @@ int main(int argc, char* argv[])
         ASF_FaceShelter rgbFaceShelterInfo = {0};
         res = ASFGetFaceShelter(handle, &rgbFaceShelterInfo);
         if (res != MOK || rgbFaceShelterInfo.num < 1)
-            printf("获取脸部遮挡【失败】（返回值: %x）\n", res);
+            printf("获取脸部遮挡【失败】（返回值: %x）\n", (uint32_t)res);
         else
             printf("获取脸部遮挡【成功】（1:表示遮挡, 0 :表示未遮挡）（返回值: %d）\n", rgbFaceShelterInfo.FaceShelter[0]);
 
@@ -321,7 +325,7 @@ int main(int argc, char* argv[])
         ASF_MaskInfo rgbMaskInfo = {0};
         res = ASFGetMask(handle, &rgbMaskInfo);
         if (res != MOK || rgbMaskInfo.num < 1)
-            printf("获取口罩检测结果【失败】（返回值: %x）\n", res);
+            printf("获取口罩检测结果【失败】（返回值: %x）\n", (uint32_t)res);
         else
             printf("获取口罩检测结果【成功】（0:代表没有带口罩，1:代表带口罩）（返回值: %d）\n", rgbMaskInfo.maskArray[0]);
 
@@ -329,7 +333,7 @@ int main(int argc, char* argv[])
         ASF_LandMarkInfo headLandMarkInfo = {0};
         res = ASFGetFaceLandMark(handle, &headLandMarkInfo);
         if (res != MOK)
-            printf("获取额头区域数组长度【失败】（返回值: %x）\n", res);
+            printf("获取额头区域数组长度【失败】（返回值: %x）\n", (uint32_t)res);
         else
             printf("获取额头区域数组长度【成功】（返回值: %d）\n", headLandMarkInfo.num);
 
@@ -349,7 +353,7 @@ int main(int argc, char* argv[])
             }
         }
         if (res != MOK)
-            printf("第三张图片获取人脸数量【失败】（返回值: %x \n", res);
+            printf("第三张图片获取人脸数量【失败】（返回值: %x \n", (uint32_t)res);
         else
             printf("第三张图片获取人脸数量【成功】（返回值: %d）\n", detectedFaces3.faceNum);
 
@@ -357,15 +361,15 @@ int main(int argc, char* argv[])
         MInt32 processIRMask = ASF_IR_LIVENESS;
         res = ASFProcessEx_IR(handle, &offscreen3, &detectedFaces3, processIRMask);
         if (res != MOK)
-            printf("IR图像活体检测【失败】（返回值: %x）\n", res);
+            printf("IR图像活体检测【失败】（返回值: %x）\n", (uint32_t)res);
         else
-            printf("IR图像活体检测【成功】（返回值: %x）\n", res);
+            printf("IR图像活体检测【成功】（返回值: %x）\n", (uint32_t)res);
 
         //获取IR活体信息
         ASF_LivenessInfo irLivenessInfo = {0};
         res = ASFGetLivenessScore_IR(handle, &irLivenessInfo);
         if (res != MOK || irLivenessInfo.num < 1)
-            printf("获取IR活体信息【失败】（返回值: %x）\n", res);
+            printf("获取IR活体信息【失败】（返回值: %x）\n", (uint32_t)res);
         else
             printf("获取IR活体信息【成功】（返回值: %d）\n", irLivenessInfo.isLive[0]);
 
@@ -378,9 +382,9 @@ int main(int argc, char* argv[])
 		//反初始化
 		res = ASFUninitEngine(handle);
 		if (res != MOK)
-			printf("销毁引擎【失败】（返回值： %x）\n", res);
+			printf("销毁引擎【失败】（返回值： %x）\n", (uint32_t)res);
 		else
-			printf("销毁引擎【成功】（返回值： %x）\n", res);
+			printf("销毁引擎【成功】（返回值： %x）\n", (uint32_t)res);
 	}
 	else
 	{
